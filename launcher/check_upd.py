@@ -1,9 +1,9 @@
 import requests
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import QMainWindow, QLabel, QApplication
-from launcher.main_window import MainWindow
+from PyQt6.QtWidgets import QMainWindow, QLabel
+from launcher.main_window.main_window import MainWindow
 from launcher.config import *
-from launcher.upd_window import UpdWindow
+from launcher.upd_window.upd_window import UpdWindow
 
 
 class UpdateCheckWindow(QMainWindow):

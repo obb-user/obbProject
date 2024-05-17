@@ -1,28 +1,9 @@
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
+# main_window.py
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QLabel
-from bot.bot_code import start_bot
+from launcher.main_window.worker import BotWorker
 from launcher.config import client_version
 import keyboard
-
-class BotController:
-    def __init__(self):
-        self.is_running = False
-
-    def toggle_bot_state(self):
-        self.is_running = not self.is_running
-        return "Остановить бота" if self.is_running else "Запустить бота"
-
-class BotWorker(QThread):
-    bot_finished = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.controller = BotController()
-
-    def run(self):
-        while self.controller.is_running:
-            start_bot()
-        self.bot_finished.emit()
 
 class MainWindow(QMainWindow):
     def __init__(self):
