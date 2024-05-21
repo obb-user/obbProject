@@ -1,10 +1,11 @@
 import asyncio
 from datetime import datetime
 import os
+import sys
 import time
 
 import pyautogui as pga
-from telegram import Bot
+from aiogram import Bot, Dispatcher
 
 
 def resource_path(relative_path):
@@ -14,19 +15,22 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
 def count_white_pixels(image, tolerance=30):
     count = sum(1 for pixel in image.getdata() if all(abs(component - 255) <= tolerance for component in pixel))
     return count
 
-def count_pixels_of_color(image, target_color, tolerance=30):
-    count = sum(1 for pixel in image.getdata() if all(abs(component - target) <= tolerance for component, target in zip(pixel, target_color)))
-    return count
-async def send_telegram_message(token, message, chat_id):
-    # Создаем объект бота
-    bot = Bot(token)
 
+def count_pixels_of_color(image, target_color, tolerance=30):
+    count = sum(1 for pixel in image.getdata() if
+                all(abs(component - target) <= tolerance for component, target in zip(pixel, target_color)))
+    return count
+
+
+async def send_telegram_message(bot, message, chat_id):
     # Отправляем сообщение
     await bot.send_message(chat_id=chat_id, text=message)
+
 
 def check_mouse():
     while True:
@@ -34,9 +38,11 @@ def check_mouse():
             return pga.locateOnScreen(mouse_icon, confidence=0.75)
         except:
             pass
+
+
 def click_center(mouse):
     while True:
-        search_region = (int(mouse[0]-65), int(mouse[1]-50), mouse[2]+30, 15)
+        search_region = (int(mouse[0] - 65), int(mouse[1] - 50), mouse[2] + 30, 15)
         screenshot = pga.screenshot(region=search_region)
         total_pixels = search_region[2] * search_region[3]  # Общее количество пикселей в области
         white_pixel_count = count_white_pixels(screenshot)
@@ -46,6 +52,7 @@ def click_center(mouse):
             print('Забросили')
             time.sleep(3)
             break
+
 
 def check_fish():
     while True:
@@ -65,6 +72,7 @@ def check_fish():
                 break
         except:
             pass
+
 
 def read_config(file_path):
     variables = {}
@@ -90,32 +98,36 @@ def read_config(file_path):
     return variables
 
 
-def bot(config_variables):
+async def bot(config_variables):
     TOKEN = config_variables['TOKEN']
-    time = int(config_variables['time'])*60
-    print(time)
-    msg = config_variables['message']
-    chat_id = config_variables['message']
-    x=0
+    delay_time = int(config_variables['time'])
+    message = config_variables['message']
+    chat_id = config_variables['chat_id']
+
+    bot = Bot(token=TOKEN)
+    dispatcher = Dispatcher(bot)
+
+    x = 0
     start_time = datetime.now()
+
     while True:
         mouse = check_mouse()
         if mouse:
             click_center(mouse)
             check_fish()
-            x = x+1
-            print(f'Поймано {x} рыб !')
+            x += 1
+            print(f'Поймано {x} рыб!')
 
             elapsed_time = datetime.now() - start_time
-            elapsed_minutes = int(elapsed_time.total_seconds())
-            print(elapsed_minutes)
-            print(time)
-            if elapsed_minutes > time:
-                asyncio.run(send_telegram_message(token=TOKEN, message=msg, chat_id=chat_id))
+            elapsed_minutes = int(elapsed_time.total_seconds() / 60)
+            if elapsed_minutes > delay_time:
+                await send_telegram_message(bot=bot, message=message, chat_id=chat_id)
                 break
 
-mouse_icon = resource_path("mouse_icon.png")
-config_file = resource_path('config.txt')
-config_variables = read_config(config_file)
 
-bot(config_variables)
+if __name__ == "__main__":
+    mouse_icon = resource_path("mouse_icon.png")
+    config_file = resource_path('config.txt')
+    config_variables = read_config(config_file)
+
+    asyncio.run(bot(config_variables))
