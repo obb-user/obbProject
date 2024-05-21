@@ -1,0 +1,4 @@
+TOKEN = "1426779210:AAH5RihktidQtKKQgyoVtqq1heNY-ZTuhMs"
+chat_id = "482197907"
+time = 2
+message = "Рыбалка окончена!"
